@@ -126,18 +126,18 @@ IF
 	DELAY(12)
 	Global("INCOMBAT","LOCALS",1)
 	OR(3)
-		!ButtonDisabled(6) //Turn undead
-		!ButtonDisabled(1) //Thieving
-		!ButtonDisabled(10) //Bardsong
+		!ButtonDisabled(BUTTON_TURNUNDEAD) //Turn undead
+		!ButtonDisabled(BUTTON_THIEVING) //Thieving
+		!ButtonDisabled(BUTTON_BATTLESONG) //Bardsong
 THEN
 	RESPONSE #100
     SetGlobal("SKILLTIME","LOCALS",1)
-	StartTimer(111,2)
+	StartTimer(111,3)
 	Continue()
 END
 
 IF
-	DELAY(15)
+	Global("SKILLTIME","LOCALS",1)
 	Global("INCOMBAT","LOCALS",1)
 	TimerExpired(111)
 THEN
