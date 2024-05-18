@@ -5,7 +5,8 @@ I tend to play baldur's gate fairly hands on, directly controlling wizards and t
 
 # Features of this AI:
 
-Toggle being passive with V key, handy if you want them to just use their modal skills
+Toggle being passive with V key, handy if you only want them to use their modal skills. 
+
 Outside combat, always use skills, during combat if you're an archer, alternate skill use and attack
 
 Your party will act as a team, if one is in combat, others if skilled, will run to help, this means your archers will actually advance and attack enemies kiting you
