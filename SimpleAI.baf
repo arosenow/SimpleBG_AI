@@ -1,0 +1,439 @@
+
+//Note
+//if a check succeeds it disables the current modal so we have to avoid successful checks except combat 
+
+IF
+	Global("BEPASSIVE","LOCALS",0)
+	HotKey(V)
+THEN
+	RESPONSE #100
+		SetGlobal("BEPASSIVE","LOCALS",1)
+		DisplayStringHead(Myself,95137)  // Not attacking enemies
+		ClearActions()
+		SetGlobal("IMHELPING","LOCALS",0)
+END
+
+IF
+	Global("BEPASSIVE","LOCALS",1)
+	HotKey(V)
+THEN
+	RESPONSE #100
+		SetGlobal("BEPASSIVE","LOCALS",0)
+		DisplayStringHead(Myself,95135)  // Attacking enemies
+END
+
+IF
+	OR(3)
+		ModalState(STEALTH)
+		StateCheck(Myself,STATE_INVISIBLE)
+		StateCheck(Myself,STATE_IMPROVEDINVISIBILITY)
+THEN
+	RESPONSE #100
+END
+
+IF
+	Global("IMHELPING","LOCALS",1)
+	OR(3)
+		SpellCast(Myself,0)
+		SpellCastInnate(Myself,0)
+		ActionListEmpty()
+THEN
+	RESPONSE #100
+	SetGlobal("IMHELPING","LOCALS",0)
+	Continue()
+END
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//If you manually changed your weapon then update the preferred weapon
+
+IF
+	Global("PREFERMELEE","LOCALS",0)
+	Global("BowEquipped","LOCALS",1)
+	!IsWeaponRanged(Myself)
+THEN
+	RESPONSE #100
+	SetGlobal("PREFERMELEE","LOCALS",1)
+	SetGlobal("BowEquipped","LOCALS",0)
+	Continue()
+END
+
+IF
+	Global("PREFERMELEE","LOCALS",1)
+	Global("BowEquipped","LOCALS",0)
+	IsWeaponRanged(Myself)
+THEN
+	RESPONSE #100
+	SetGlobal("PREFERMELEE","LOCALS",0)
+	SetGlobal("BowEquipped","LOCALS",1)
+	Continue()
+END
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//If combat starts start the timers that limit modals 
+
+IF
+	Global("INCOMBAT","LOCALS",1)
+	!Exists([Enemy])
+	CombatCounter(0)
+THEN
+	RESPONSE #100
+	SetGlobal("INCOMBAT","LOCALS",0)
+	SetGlobal("IMHELPING","LOCALS",0)
+	SetGlobal("SKILLTIME","LOCALS",1)
+END
+
+IF
+	Global("INCOMBAT","LOCALS",0)
+	!IsWeaponRanged(Myself)
+	OR(2)
+		Exists([Enemy])
+		CombatCounterGT(0)
+THEN
+	RESPONSE #100
+	SetGlobal("PREFERMELEE","LOCALS",1)
+	SetGlobal("BowEquipped","LOCALS",0)
+	Continue()
+END
+
+IF
+	Global("INCOMBAT","LOCALS",0)
+	IsWeaponRanged(Myself)
+	OR(2)
+		Exists([Enemy])
+		CombatCounterGT(0)
+THEN
+	RESPONSE #100
+	SetGlobal("PREFERMELEE","LOCALS",0)
+	SetGlobal("BowEquipped","LOCALS",1)
+	Continue()
+END
+
+IF
+	Global("INCOMBAT","LOCALS",0)
+	OR(2)
+		Exists([Enemy])
+		CombatCounterGT(0)
+THEN
+	RESPONSE #100
+	SetGlobal("INCOMBAT","LOCALS",1)
+	SetGlobal("SKILLTIME","LOCALS",0)
+END
+
+// Fighters can't activate anything, so make them keep fighting forever
+IF
+	DELAY(12)
+	Global("INCOMBAT","LOCALS",1)
+	OR(3)
+		!ButtonDisabled(6) //Turn undead
+		!ButtonDisabled(1) //Thieving
+		!ButtonDisabled(10) //Bardsong
+THEN
+	RESPONSE #100
+    SetGlobal("SKILLTIME","LOCALS",1)
+	Continue()
+END
+
+IF
+	DELAY(15)
+	Global("INCOMBAT","LOCALS",1)
+THEN
+	RESPONSE #100
+    SetGlobal("SKILLTIME","LOCALS",0)
+	Continue()
+END
+
+////////////////////////////////////////////////////////////////////////////////////
+//See who is near you
+IF
+    OR(7)
+	See(Nearest([ENEMY]))
+	See(SecondNearest([ENEMY]))
+	See(ThirdNearest([ENEMY]))
+	See(FourthNearest([ENEMY]))
+	See(FifthNearest([ENEMY]))
+	See(SixthNearest([ENEMY]))
+	See([ENEMY])
+	FALSE()
+THEN
+	RESPONSE #100
+		NoAction()
+END
+
+///////////////////////////////////////////////
+
+IF
+	!ModalState(SHAMANDANCE)
+	AttackedBy([EVILCUTOFF],DEFAULT)
+	!Range(LastSeenBy(Myself),5)
+THEN
+	RESPONSE #100
+	Shout(1234)
+	Continue()
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//If an enemy is close by and you prefer melee, swap weapons
+IF
+	Global("BEPASSIVE","LOCALS",0)
+	Range(LastSeenBy(Myself),5)
+	Global("PREFERMELEE","LOCALS",1)
+	OR(2)
+		Global("IMHELPING","LOCALS",1)
+		ActionListEmpty()
+	IsWeaponRanged(Myself)
+	!StateCheck(LastSeenBy(Myself),state_panic)
+	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
+THEN
+	RESPONSE #100
+	EquipMostDamagingMelee()
+	SetGlobal("BowEquipped","LOCALS",0)
+	Continue()
+END
+
+//Fight nearby people 
+IF
+	Global("BEPASSIVE","LOCALS",0)
+	OR(2)
+		Global("IMHELPING","LOCALS",1)
+		ActionListEmpty()
+	OR(2)
+		HasWeaponEquiped()
+		Class(Myself,MONK)
+	OR(2)
+		IsWeaponRanged(Myself)
+		!TargetUnreachable(LastSeenBy(Myself))
+	Range(LastSeenBy(Myself),5)
+	CheckStatLT(Myself,21,THAC0)
+	!InParty(LastSeenBy(Myself))
+	!StateCheck(LastSeenBy(Myself),state_panic)
+	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
+THEN
+	RESPONSE #100
+		help()
+		SetGlobal("IMHELPING","LOCALS",0)
+		SetInterrupt(TRUE)
+		AttackReevaluate(LastSeenBy(Myself),1)
+END
+
+
+//IF you prefer melee then grab your axe and get going if you hear someone call for help
+IF
+	Global("BEPASSIVE","LOCALS",0)
+	Global("SKILLTIME","LOCALS",0)
+	Global("PREFERMELEE","LOCALS",1)
+	ActionListEmpty()
+	IsWeaponRanged(Myself)
+	HPGT(Myself,6)
+	HPPercentGT(Myself,70)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+	Help([PC])
+	OR(7)
+		Class(Myself,PALADIN_ALL)
+		Class(Myself,FIGHTER_ALL)
+		Class(Myself,RANGER_ALL)
+		Class(Myself,MONK)
+		Class(Myself,THIEF_ALL)
+		Class(Myself,CLERIC_ALL)
+		Class(Myself,DRUID_ALL)
+	!ModalState(SHAMANDANCE)
+	!TargetUnreachable(LastHelp(Myself))
+	!Range(LastHelp(Myself),1)
+THEN
+	RESPONSE #100
+	EquipMostDamagingMelee()
+	SetGlobal("BowEquipped","LOCALS",0)
+	Continue()
+END
+
+//This makes the archer stop moving and attack if they previously heeded a call for help
+IF
+	Global("IMHELPING","LOCALS",1)
+	IsWeaponRanged(Myself)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+	Range(LastSeenBy(Myself),30)
+	!InParty(LastSeenBy(Myself))
+	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
+	!ModalState(SHAMANDANCE)
+THEN
+	RESPONSE #100
+	SetGlobal("IMHELPING","LOCALS",0)
+	SetInterrupt(TRUE)
+	AttackReevaluate(LastSeenBy(Myself),1)
+END
+
+//Attack with your bow if you aren't helping people
+IF
+	Global("BEPASSIVE","LOCALS",0)
+	Global("SKILLTIME","LOCALS",0)
+	ActionListEmpty()
+	IsWeaponRanged(Myself)
+	HaveUsableWeapon()
+	!ModalState(SHAMANDANCE)
+	!InParty(LastSeenBy(Myself))
+	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
+	WeaponCanDamage(LastSeenBy(Myself),MAINHAND)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+THEN
+	RESPONSE #100
+		SetGlobal("IMHELPING","LOCALS",0)
+		SetInterrupt(TRUE)
+		AttackReevaluate(LastSeenBy(Myself),1)
+END
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//If you're a competent archer help anyone who shouted out for help from a ranged opponent
+IF
+	Heard([PC],1234)
+	IsWeaponRanged(Myself)
+	Global("PREFERMELEE","LOCALS",0)
+	Global("SKILLTIME","LOCALS",0)
+	Global("BEPASSIVE","LOCALS",0)
+	ActionListEmpty()
+	HPPercentGT(Myself,50)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+	OR(4)
+		Class(Myself,PALADIN_ALL)
+		Class(Myself,FIGHTER_ALL)
+		Class(Myself,RANGER_ALL)
+		Class(Myself,THIEF_ALL)
+	!ModalState(SHAMANDANCE)
+	!TargetUnreachable(LastHeardBy(Myself))
+	!Range(LastHeardBy(Myself),1)
+THEN
+	RESPONSE #100
+		SetGlobal("IMHELPING","LOCALS",1)
+		SetInterrupt(TRUE)
+		MoveToObject(LastHeardBy(Myself))
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// If you're a fighter or not a weakling and you have >70% of your health, help others
+IF
+	Global("SKILLTIME","LOCALS",0)
+	Global("BEPASSIVE","LOCALS",0)
+	ActionListEmpty()
+	HPGT(Myself,6)
+	HPPercentGT(Myself,70)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+	Help([PC])
+	OR(7)
+		Class(Myself,PALADIN_ALL)
+		Class(Myself,FIGHTER_ALL)
+		Class(Myself,RANGER_ALL)
+		Class(Myself,MONK)
+		Class(Myself,THIEF_ALL)
+		Class(Myself,CLERIC_ALL)
+		Class(Myself,DRUID_ALL)
+	!ModalState(SHAMANDANCE)
+	!TargetUnreachable(LastHelp(Myself))
+	!Range(LastHelp(Myself),1)
+THEN
+	RESPONSE #100
+		SetGlobal("IMHELPING","LOCALS",1)
+		SetInterrupt(TRUE)
+		MoveToObject(LastHelp(Myself))
+END
+
+
+//IF you can't help anyone but still see enemies then maybe you need a bow out
+IF
+	!ModalState(SHAMANDANCE)
+	Global("BEPASSIVE","LOCALS",0)
+	Global("SKILLTIME","LOCALS",0)
+	Global("IMHELPING","LOCALS",0)
+	ActionListEmpty()
+	!Range(LastSeenBy(Myself),5)	
+	!IsWeaponRanged(Myself)
+THEN
+	RESPONSE #100
+	EquipRanged() 
+	SetGlobal("BowEquipped","LOCALS",1)
+END
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// If you're using ranged weapons or are using a melee but aren't in combat, use your abilities
+// A couple of timers here lets you alternate skills and combat optimally
+
+//This stops the below trying to run when you're in a container
+IF
+	ButtonDisabled(BUTTON_DIALOG)
+THEN
+	RESPONSE #100
+END
+
+//If you're a cleric and there's undead turn undead
+IF
+	ActionListEmpty()
+	!ButtonDisabled(BUTTON_TURNUNDEAD)
+	Global("INCOMBAT","LOCALS",1)
+	Exists([ENEMY.UNDEAD])
+	!Exists([ALLY.UNDEAD])
+	!Exists([NEUTRAL.UNDEAD])
+	!ModalState(BATTLESONG)  
+	!ModalState(TURNUNDEAD) 
+	!ModalState(SHAMANDANCE)
+	!ModalState(DETECTTRAPS)
+	InParty(Myself)
+	OR(2)
+		Class(Myself,CLERIC_ALL)
+		Class(Myself,PALADIN_ALL)
+THEN
+	RESPONSE #100
+		Turn()
+END
+
+// Detect traps if you can
+IF
+	ActionListEmpty()
+	!ButtonDisabled(BUTTON_THIEVING)
+	!ModalState(BATTLESONG)   
+	!ModalState(TURNUNDEAD) 
+	!ModalState(SHAMANDANCE)
+	!ModalState(DETECTTRAPS)
+	InParty(Myself)
+	OR(3)
+		Class(Myself,THIEF_ALL)
+		Class(Myself,MONK)
+		Class(Myself,SHAMAN)
+THEN
+	RESPONSE #100
+		FindTraps()
+END
+
+//If you're a bard try singing
+IF
+	ActionListEmpty()
+	!ButtonDisabled(BUTTON_BATTLESONG)
+	!ModalState(BATTLESONG)  
+	!ModalState(TURNUNDEAD) 
+	!ModalState(SHAMANDANCE)
+	!ModalState(DETECTTRAPS)
+	Class(Myself,BARD)
+	NumInPartyAliveGT(2)
+	Global("INCOMBAT","LOCALS",1)
+THEN
+	RESPONSE #100
+		BattleSong()
+END
+
+
+IF
+	Global("SKILLTIME","LOCALS",0)
+	Global("BEPASSIVE","LOCALS",0)
+	!ModalState(SHAMANDANCE)
+	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
+	Range(LastSeenBy(Myself),5)
+THEN
+	RESPONSE #100
+	Help()
+END
