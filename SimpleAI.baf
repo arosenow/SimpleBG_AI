@@ -132,12 +132,14 @@ IF
 THEN
 	RESPONSE #100
     SetGlobal("SKILLTIME","LOCALS",1)
+	StartTimer(111,2)
 	Continue()
 END
 
 IF
 	DELAY(15)
 	Global("INCOMBAT","LOCALS",1)
+	TimerExpired(111)
 THEN
 	RESPONSE #100
     SetGlobal("SKILLTIME","LOCALS",0)
