@@ -1,5 +1,5 @@
 # SimpleBG_AI
-Simple Baldurs Gate AI 1.0
+Simple Baldurs Gate AI 1.01
 
 I tend to play baldur's gate fairly hands on, directly controlling wizards and trying to constrain warriors to attacking those nearby. 
 
@@ -17,6 +17,9 @@ A positive consequence of this, if your mage runs out of darts they no longer ru
 Don't do anything to break stealth
 
 If an enemy is very close then attack or if you have a bow attack at range
+
+#History
+1.01 Fixed that the combat skill timer could break as it wasn't 3 seconds every 12, but 2 timers on different frequencies
 
 
 
