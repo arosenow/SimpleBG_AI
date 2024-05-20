@@ -149,7 +149,7 @@ END
 ////////////////////////////////////////////////////////////////////////////////////
 //See who is near you
 IF
-    OR(7)
+	OR(7)
 	See(Nearest([ENEMY]))
 	See(SecondNearest([ENEMY]))
 	See(ThirdNearest([ENEMY]))
@@ -185,7 +185,7 @@ IF
 		Global("IMHELPING","LOCALS",1)
 		ActionListEmpty()
 	IsWeaponRanged(Myself)
-	!StateCheck(LastSeenBy(Myself),state_panic)
+	NotStateCheck(LastSeenBy(Myself),state_panic)
 	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
 THEN
 	RESPONSE #100
@@ -209,7 +209,7 @@ IF
 	Range(LastSeenBy(Myself),5)
 	CheckStatLT(Myself,21,THAC0)
 	!InParty(LastSeenBy(Myself))
-	!StateCheck(LastSeenBy(Myself),state_panic)
+	NotStateCheck(LastSeenBy(Myself),state_panic)
 	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
 THEN
 	RESPONSE #100
@@ -355,6 +355,7 @@ IF
 	ActionListEmpty()
 	!Range(LastSeenBy(Myself),5)	
 	!IsWeaponRanged(Myself)
+	CanEquipRanged()
 THEN
 	RESPONSE #100
 	EquipRanged() 
