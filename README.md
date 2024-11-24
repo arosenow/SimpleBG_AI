@@ -21,6 +21,7 @@ If an enemy is very close then attack or if you have a bow attack at range
 
 #History
 1.01 Fixed that the combat skill timer could break as it wasn't 3 seconds every 12, but 2 timers on different frequencies
+
 1.02 Made the necessary adjustments for Icewind Dale 2. Sadly there's no way for AI to identify switches in the environment as opposed to enemies
 
 
