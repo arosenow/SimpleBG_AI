@@ -1,5 +1,5 @@
 # SimpleBG_AI
-Simple Baldurs Gate AI 1.01
+Simple Baldurs Gate AI 1.02
 
 I tend to play baldur's gate fairly hands on, directly controlling wizards and trying to constrain warriors to attacking those nearby. 
 
