@@ -31,17 +31,6 @@ THEN
 	RESPONSE #100
 END
 
-IF
-	Global("IMHELPING","LOCALS",1)
-	OR(2)
-		ActionListEmpty()
-		SpellCast(Myself,0)
-THEN
-	RESPONSE #100
-	SetGlobal("IMHELPING","LOCALS",0)
-	Continue()
-END
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // Equip your favourite weapon once combat is over
 
@@ -55,6 +44,7 @@ IF
 THEN
 	RESPONSE #100
 	SetGlobal("BowEquipped","LOCALS",0)
+	SetGlobal("IMHELPING","LOCALS",0)
 	EquipMostDamagingMelee()
 	Continue()
 END
@@ -65,13 +55,15 @@ END
 
 IF
 	Global("INCOMBAT","LOCALS",0)
+	ActionListEmpty()
 	OR(2)
 		Exists([Enemy])
-		CombatCounterGT(0)
+		!CombatCounter(0)
 THEN
 	RESPONSE #100
 	SetGlobal("INCOMBAT","LOCALS",1)
 	SetGlobal("SKILLTIME","LOCALS",0)
+	SetGlobal("IMHELPING","LOCALS",0)
 	Continue()
 END
 
@@ -122,32 +114,7 @@ THEN
 	Continue()
 END
 
-//////////////////////////////////////////////////////////////////////////
-// Fighters can't activate anything, so make them keep fighting forever
-IF
-	DELAY(12)
-	Global("INCOMBAT","LOCALS",1)
-	OR(3)
-		!ButtonDisabled(BUTTON_TURNUNDEAD) //Turn undead
-		!ButtonDisabled(BUTTON_THIEVING) //Thieving
-		!ButtonDisabled(BUTTON_BATTLESONG) //Bardsong
-THEN
-	RESPONSE #100
-    SetGlobal("SKILLTIME","LOCALS",1)
-	StartTimer(111,3)
-	Continue()
-END
 
-IF
-	Global("SKILLTIME","LOCALS",1)
-	Global("INCOMBAT","LOCALS",1)
-	TimerExpired(111)
-THEN
-	RESPONSE #100
-    SetGlobal("SKILLTIME","LOCALS",0)
-	StartTimer(111,3)
-	Continue()
-END
 
 ////////////////////////////////////////////////////////////////////////////////////
 //See who is near you
@@ -165,7 +132,33 @@ THEN
 		NoAction()
 END
 
+//////////////////////////////////////////////////////////////////////////
+// Fighters can't activate anything, so make them keep fighting forever
+IF
+	DELAY(12)
+	Global("INCOMBAT","LOCALS",1)
+	OR(3)
+		!ButtonDisabled(BUTTON_TURNUNDEAD) //Turn undead
+		!ButtonDisabled(BUTTON_THIEVING) //Thieving
+		!ButtonDisabled(BUTTON_BATTLESONG) //Bardsong
+THEN
+	RESPONSE #100
+    SetGlobal("SKILLTIME","LOCALS",1)
+	SetGlobal("IMHELPING","LOCALS",0)
+	StartTimer(111,3)
+	Continue()
+END
 
+IF
+	Global("SKILLTIME","LOCALS",1)
+	Global("INCOMBAT","LOCALS",1)
+	TimerExpired(111)
+	ActionListEmpty()
+THEN
+	RESPONSE #100
+    SetGlobal("SKILLTIME","LOCALS",0)
+	Continue()
+END
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //If an enemy is close by and you prefer melee, swap weapons
@@ -173,7 +166,6 @@ IF
 	Global("BEPASSIVE","LOCALS",0)
 	Range(LastSeenBy(Myself),5)
 	Global("PREFERMELEE","LOCALS",1)
-	Global("BowEquipped","LOCALS",1)
 	IsWeaponRanged(Myself)
 	OR(2)
 		Global("IMHELPING","LOCALS",1)
@@ -189,7 +181,7 @@ THEN
 	EquipMostDamagingMelee()
 	SetGlobal("BowEquipped","LOCALS",0)
 	SetInterrupt(TRUE)
-	Continue()
+	AttackReevaluate(LastSeenBy(Myself),3)
 END
 
 //Fight nearby people 
@@ -198,9 +190,7 @@ IF
 	OR(2)
 		Global("IMHELPING","LOCALS",1)
 		ActionListEmpty()
-	OR(2)
-		HasWeaponEquiped()
-		Class(Myself,MONK)
+	HasWeaponEquiped()
 	!IsWeaponRanged(Myself)
 	Range(LastSeenBy(Myself),5)
 	CheckStatLT(Myself,21,THAC0)
@@ -225,7 +215,6 @@ IF
 	Global("BEPASSIVE","LOCALS",0)
 	Global("SKILLTIME","LOCALS",0)
 	Global("PREFERMELEE","LOCALS",1)
-	Global("BowEquipped","LOCALS",1)
 	IsWeaponRanged(Myself)
 	ActionListEmpty()
 	HPGT(Myself,6)
@@ -233,12 +222,11 @@ IF
 	CHECKSTATGT(Myself,4,VISUALRANGE)
 	CheckStatLT(Myself,21,THAC0)
 	Help([PC])
-	OR(7)
+	OR(6)
 		Class(Myself,PALADIN_ALL)
 		Class(Myself,FIGHTER_ALL)
 		Class(Myself,RANGER_ALL)
 		Class(Myself,MONK)
-		Class(Myself,THIEF_ALL)
 		Class(Myself,CLERIC_ALL)
 		Class(Myself,DRUID_ALL)
 	!ModalState(SHAMANDANCE)
@@ -255,31 +243,16 @@ THEN
 	MoveToObject(LastHelp(Myself))
 END
 
-//This makes the archer stop moving and attack if they previously heeded a call for help
-IF
-	Global("IMHELPING","LOCALS",1)
-	IsWeaponRanged(Myself)
-	CHECKSTATGT(Myself,4,VISUALRANGE)
-	CheckStatLT(Myself,21,THAC0)
-	Range(LastSeenBy(Myself),30)
-	!InParty(LastSeenBy(Myself))
-	!Allegiance(LastSeenBy(Myself),GOODCUTOFF)  
-	!Allegiance(LastSeenBy(Myself),ALLY) 
-	!Allegiance(LastSeenBy(Myself),NEUTRAL) 
-	!Class(LastSeenBy(Myself),INNOCENT)
-	!ModalState(SHAMANDANCE)
-THEN
-	RESPONSE #100
-	SetGlobal("IMHELPING","LOCALS",0)
-	SetInterrupt(TRUE)
-	AttackReevaluate(LastSeenBy(Myself),1)
-END
-
 //Attack with your bow if equipped
 IF
 	Global("BEPASSIVE","LOCALS",0)
-	Global("SKILLTIME","LOCALS",0)
-	ActionListEmpty()
+	OR(2)
+		Global("IMHELPING","LOCALS",1)
+		Global("SKILLTIME","LOCALS",0)
+	OR(2)
+		Global("IMHELPING","LOCALS",1)
+		ActionListEmpty()
+	Range(LastSeenBy(Myself),30)
 	IsWeaponRanged(Myself)
 	HaveUsableWeapon()
 	!ModalState(SHAMANDANCE)
@@ -294,47 +267,23 @@ IF
 THEN
 	RESPONSE #100
 		SetGlobal("IMHELPING","LOCALS",0)
+		SetGlobal("INCOMBAT","LOCALS",1)
 		SetInterrupt(TRUE)
+		Shout(1234)
 		AttackReevaluate(LastSeenBy(Myself),1)
 END
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-//If you're a competent archer help anyone who shouted out for help from a ranged opponent
-IF
-	Heard([PC],1234)
-	IsWeaponRanged(Myself)
-	Global("SKILLTIME","LOCALS",0)
-	Global("BEPASSIVE","LOCALS",0)
-	Global("IMHELPING","LOCALS",0)
-	ActionListEmpty()
-	HPPercentGT(Myself,50)
-	CHECKSTATGT(Myself,4,VISUALRANGE)
-	CheckStatLT(Myself,21,THAC0)
-	OR(4)
-		Class(Myself,PALADIN_ALL)
-		Class(Myself,FIGHTER_ALL)
-		Class(Myself,RANGER_ALL)
-		Class(Myself,THIEF_ALL)
-	!ModalState(SHAMANDANCE)
-	!TargetUnreachable(LastHeardBy(Myself))
-	!Range(LastHeardBy(Myself),1)
-THEN
-	RESPONSE #100
-		SetGlobal("IMHELPING","LOCALS",1)
-		SetInterrupt(TRUE)
-		MoveToObject(LastHeardBy(Myself))
-END
 
-////////////////////////////////////////////////////////////////////////////////////////////
-
-// If you're a fighter or not a weakling and you have >70% of your health, help others
+// If you're a fighter or not a weakling and you have >50% of your health, help others
 IF
 	Global("IMHELPING","LOCALS",0)
 	Global("SKILLTIME","LOCALS",0)
 	Global("BEPASSIVE","LOCALS",0)
 	Global("PREFERMELEE","LOCALS",1)
 	ActionListEmpty()
+	!Range(LastSeenBy(Myself),5)
 	HPGT(Myself,6)
 	HPPercentGT(Myself,50)
 	CHECKSTATGT(Myself,4,VISUALRANGE)
@@ -354,6 +303,7 @@ IF
 THEN
 	RESPONSE #100
 		SetGlobal("IMHELPING","LOCALS",1)
+		SetGlobal("INCOMBAT","LOCALS",1)
 		SetInterrupt(TRUE)
 		MoveToObject(LastHelp(Myself))
 END
@@ -361,12 +311,14 @@ END
 //IF you can't help anyone but still see enemies then maybe you need a bow out
 IF
 	!ModalState(SHAMANDANCE)
+	HPPercentLT(Myself,50)
 	Global("PREFERMELEE","LOCALS",1)
 	Global("BEPASSIVE","LOCALS",0)
 	Global("SKILLTIME","LOCALS",0)
 	Global("IMHELPING","LOCALS",0)
 	ActionListEmpty()
-	!Range(LastSeenBy(Myself),5)	
+	!Range(LastSeenBy(Myself),10)	
+	Range(LastSeenBy(Myself),25)	
 	!IsWeaponRanged(Myself)
 	CanEquipRanged()
 THEN
@@ -375,7 +327,37 @@ THEN
 	EquipRanged() 
 	Shout(1234)
 	SetGlobal("BowEquipped","LOCALS",1)
+	SetGlobal("INCOMBAT","LOCALS",1)
 	SetInterrupt(TRUE)
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////
+//If you're a competent archer help anyone who shouted out for help from a ranged opponent
+IF
+	Heard([PC],1234)
+	IsWeaponRanged(Myself)
+	Global("SKILLTIME","LOCALS",0)
+	Global("BEPASSIVE","LOCALS",0)
+	Global("IMHELPING","LOCALS",0)
+	ActionListEmpty()
+	HPPercentGT(Myself,25)
+	CHECKSTATGT(Myself,4,VISUALRANGE)
+	CheckStatLT(Myself,21,THAC0)
+	OR(4)
+		Class(Myself,PALADIN_ALL)
+		Class(Myself,FIGHTER_ALL)
+		Class(Myself,RANGER_ALL)
+		Class(Myself,THIEF_ALL)
+	!ModalState(SHAMANDANCE)
+	!TargetUnreachable(LastHeardBy(Myself))
+	Range(LastHeardBy(Myself),15)
+	!Range(LastHeardBy(Myself),1)
+THEN
+	RESPONSE #100
+		SetGlobal("IMHELPING","LOCALS",1)
+		SetInterrupt(TRUE)
+		MoveToObject(LastHeardBy(Myself))
+		SetGlobal("INCOMBAT","LOCALS",1)
 END
 
 ///////////////////////////////////////////////
@@ -384,7 +366,9 @@ IF
 	!ModalState(SHAMANDANCE)
 	AttackedBy([EVILCUTOFF],DEFAULT)
 	!Range(LastSeenBy(Myself),5)
+	!IsWeaponRanged(Myself)
 	Global("SKILLTIME","LOCALS",0)
+	ActionListEmpty()
 THEN
 	RESPONSE #100
 	Shout(1234)
@@ -395,6 +379,7 @@ END
 //If you managed to get through all that then maybe combat is over
 IF
 	Global("INCOMBAT","LOCALS",1)
+	ActionListEmpty()
 	!Exists([Enemy])
 	CombatCounter(0)
 THEN
@@ -412,6 +397,7 @@ END
 //This stops the below trying to run when you're in a container
 IF
 	ButtonDisabled(BUTTON_DIALOG)
+	ActionListEmpty()
 THEN
 	RESPONSE #100
 END
@@ -471,14 +457,3 @@ THEN
 		BattleSong()
 END
 
-
-IF
-	Global("SKILLTIME","LOCALS",0)
-	Global("BEPASSIVE","LOCALS",0)
-	!ModalState(SHAMANDANCE)
-	Allegiance(LastSeenBy(Myself),EVILCUTOFF)
-	Range(LastSeenBy(Myself),5)
-THEN
-	RESPONSE #100
-	Help()
-END
