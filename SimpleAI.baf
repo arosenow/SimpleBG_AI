@@ -35,8 +35,8 @@ END
 // Fighters can't activate anything, so make them keep fighting forever
 IF
 	DELAY(12)
-	!Range(LastSeenBy(Myself),5)
 	ActionListEmpty()
+	!ButtonDisabled(BUTTON_DIALOG)
 	OR(2)
 		!CombatCounter(0)
 		Exists([Enemy])
@@ -78,7 +78,6 @@ IF
 	FALSE()
 THEN
 	RESPONSE #100
-		NoAction()
 END
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +89,10 @@ IF
 		Global("IMHELPING","LOCALS",1)
 		ActionListEmpty()
 	!IsWeaponRanged(Myself)
-	Range(LastSeenBy(Myself),7)
+	!ModalState(SHAMANDANCE)
+	LOS(LastSeenBy(Myself),7)
 	CheckStatLT(Myself,21,THAC0)
+	!TargetUnreachable(LastSeenBy(Myself))
 	!Allegiance(LastSeenBy(Myself),GOODCUTOFF) 
 	!Allegiance(LastSeenBy(Myself),ALLY) 
 	!Allegiance(LastSeenBy(Myself),NEUTRAL) 
@@ -113,9 +114,11 @@ IF
 	OR(2)
 		Global("IMHELPING","LOCALS",1)
 		ActionListEmpty()
-	Range(LastSeenBy(Myself),30)
+	LOS(LastSeenBy(Myself),30)
+	!TargetUnreachable(LastSeenBy(Myself))
 	IsWeaponRanged(Myself)
 	!ModalState(SHAMANDANCE)
+	!TargetUnreachable(LastSeenBy(Myself))
 	!InParty(LastSeenBy(Myself))
 	!Allegiance(LastSeenBy(Myself),GOODCUTOFF) 
 	!Allegiance(LastSeenBy(Myself),ALLY) 
@@ -193,41 +196,16 @@ THEN
 		MoveToObject(LastHelp(Myself))
 END
 
-///////////////////////////////////////////////
-// If you're being attacked from range call for help
-IF
-	!ModalState(SHAMANDANCE)
-	AttackedBy([EVILCUTOFF],DEFAULT)
-	!Range(LastSeenBy(Myself),5)
-	!IsWeaponRanged(Myself)
-	Global("SKILLTIME","LOCALS",0)
-	ActionListEmpty()
-THEN
-	RESPONSE #100
-	Shout(1234)
-	Continue()
-END
-
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // If you're using ranged weapons or are using a melee but aren't in combat, use your abilities
 // A couple of timers here lets you alternate skills and combat optimally
 
-//This stops the below trying to run when you're in a container
-IF
-	ButtonDisabled(BUTTON_DIALOG)
-	ActionListEmpty()
-	!ModalState(BATTLESONG)   
-	!ModalState(TURNUNDEAD) 
-	!ModalState(SHAMANDANCE)
-	!ModalState(DETECTTRAPS)
-THEN
-	RESPONSE #100
-END
+
 
 //If you're a cleric and there's undead turn undead
 IF
 	ActionListEmpty()
+	!ButtonDisabled(BUTTON_DIALOG)
 	!ButtonDisabled(BUTTON_TURNUNDEAD)
 	Exists([ENEMY.UNDEAD])
 	!Exists([ALLY.UNDEAD])
@@ -249,6 +227,7 @@ END
 IF
 	ActionListEmpty()
 	!ButtonDisabled(BUTTON_THIEVING)
+	!ButtonDisabled(BUTTON_DIALOG)
 	!ModalState(BATTLESONG)   
 	!ModalState(TURNUNDEAD) 
 	!ModalState(SHAMANDANCE)
@@ -267,6 +246,7 @@ END
 IF
 	ActionListEmpty()
 	!ButtonDisabled(BUTTON_BATTLESONG)
+	!ButtonDisabled(BUTTON_DIALOG)
 	!ModalState(BATTLESONG)  
 	!ModalState(TURNUNDEAD) 
 	!ModalState(SHAMANDANCE)
@@ -282,17 +262,19 @@ THEN
 END
 
 
+///////////////////////////////////////////////
+// If you're being attacked from range call for help
 IF
-	ActionListEmpty()
-	!ModalState(BATTLESONG)   
-	!ModalState(TURNUNDEAD) 
 	!ModalState(SHAMANDANCE)
-	!ModalState(DETECTTRAPS)
+	AttackedBy([EVILCUTOFF],DEFAULT)
+	!Range(LastSeenBy(Myself),5)
+	!IsWeaponRanged(Myself)
+	Global("SKILLTIME","LOCALS",0)
+	ActionListEmpty()
 	OR(2)
-		Exists([Enemy])
 		!CombatCounter(0)
+		Exists([Enemy])
 THEN
 	RESPONSE #100
-	StartTimer(111,1)
-	SetGlobal("SKILLTIME","LOCALS",0)
+	Shout(1234)
 END
