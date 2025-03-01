@@ -90,7 +90,6 @@ IF
 		ActionListEmpty()
 	!IsWeaponRanged(Myself)
 	!ModalState(SHAMANDANCE)
-	LOS(LastSeenBy(Myself),7)
 	CheckStatLT(Myself,21,THAC0)
 	!TargetUnreachable(LastSeenBy(Myself))
 	!Allegiance(LastSeenBy(Myself),GOODCUTOFF) 
@@ -98,6 +97,7 @@ IF
 	!Allegiance(LastSeenBy(Myself),NEUTRAL) 
 	!InParty(LastSeenBy(Myself))
 	!Class(LastSeenBy(Myself),INNOCENT)
+	LOS(LastSeenBy(Myself),7)
 THEN
 	RESPONSE #100
 		SetInterrupt(FALSE)
