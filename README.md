@@ -1,5 +1,5 @@
 # SimpleBG_AI
-Simple Baldurs Gate AI 1.02
+Simple Baldurs Gate AI 1.03
 
 I tend to play baldur's gate fairly hands on, directly controlling wizards and trying to constrain warriors to attacking those nearby. 
 
@@ -19,5 +19,5 @@ Don't do anything to break stealth
 
 1.02 Made the necessary adjustments for Icewind Dale 2. Sadly there's no way for AI to identify switches in the environment as opposed to enemies
 
-
+1.03 Removed weapon swapping, added a LOS check before you attack to prevent changing targets to an ally due to engine bug. Added a check whether you're neutral or allied because the engine occasionally misflagsnpcs as enemies
 
