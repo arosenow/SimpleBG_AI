@@ -11,13 +11,8 @@ Outside combat, always use skills, during combat if you're an archer, alternate 
 
 Your party will act as a team, if one is in combat, others if skilled, will run to help, this means your archers will actually advance and attack enemies kiting you
 
-Remember if you told them to use melee or ranged weapons. Eg they'll use melee if they can, only using a bow if the enemy is far away, unless you told them to use bows in which case they will never change.
-
-A positive consequence of this, if your mage runs out of darts they no longer run into combat unless someone is very close
-
 Don't do anything to break stealth
 
-If an enemy is very close then attack or if you have a bow attack at range
 
 #History
 1.01 Fixed that the combat skill timer could break as it wasn't 3 seconds every 12, but 2 timers on different frequencies
