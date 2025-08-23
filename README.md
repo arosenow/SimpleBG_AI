@@ -23,3 +23,5 @@ Don't do anything to break stealth
 
 1.04 Target Unreachable was incorrectly used for ranged attacks and preventing targeting of characters visible behind obstacles
 
+Added EasyIWD and EasyIWD2 as sadly those games have different triggers and required workarounds
+
