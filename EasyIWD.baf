@@ -40,10 +40,9 @@ IF
 	OR(2)
 		!CombatCounter(0)
 		Exists([Enemy])
-	OR(3)
+	OR(2)
 		!ButtonDisabled(BUTTON_TURNUNDEAD) //Turn undead
 		!ButtonDisabled(BUTTON_THIEVING) //Thieving
-		!ButtonDisabled(BUTTON_BATTLESONG) //Bardsong
 THEN
 	RESPONSE #100
     SetGlobal("SKILLTIME","LOCALS",1)
@@ -240,7 +239,6 @@ END
 //If you're a bard try singing
 IF
 	ActionListEmpty()
-	!ButtonDisabled(BUTTON_BATTLESONG)
 	!ButtonDisabled(BUTTON_DIALOG)
 	!ModalState(BATTLESONG)  
 	!ModalState(TURNUNDEAD) 
